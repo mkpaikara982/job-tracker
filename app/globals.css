@@ -1,26 +1,36 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+	--background: #f8fafc; /* slate-50 */
+	--foreground: #0f172a; /* slate-900 */
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+	--color-background: var(--background);
+	--color-foreground: var(--foreground);
+	--font-sans: var(--font-geist-sans);
+	--font-mono: var(--font-geist-mono);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+	background: var(--background);
+	color: var(--foreground);
+}
+
+/* Shared form control style used across the app. */
+@layer components {
+	.input {
+		width: 100%;
+		border-radius: 0.5rem;
+		border: 1px solid var(--color-slate-300, #cbd5e1);
+		background: #fff;
+		padding: 0.5rem 0.625rem;
+		font-size: 0.875rem;
+		color: #0f172a;
+		outline: none;
+	}
+	.input:focus {
+		border-color: #94a3b8;
+		box-shadow: 0 0 0 3px rgb(148 163 184 / 0.2);
+	}
 }

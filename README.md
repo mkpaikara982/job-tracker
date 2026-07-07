@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# JobTrackr — Regional-NSW Job Application Tracker
 
-## Getting Started
+A personal, single-user job-hunt dashboard that tracks applications across **SEEK, LinkedIn, and Indeed** on one kanban board — with automatic **designated-regional-area (NSW) tagging** built for the subclass 485 → 491 skilled-visa pathway.
 
-First, run the development server:
+> Every saved job is auto-classified as **Regional NSW** (counts toward a 491) or **Greater Sydney / non-regional**, using the authoritative [Home Affairs designated-regional-area postcodes](https://immi.homeaffairs.gov.au/visas/working-in-australia/skill-occupation-list/regional-postcodes).
+
+## Features
+
+- **Kanban pipeline** — drag applications through `Saved → Applied → Interview → Offer → Rejected` (dnd-kit). Reordering and status changes persist automatically.
+- **Regional-NSW auto-tagging** — each job is tagged by postcode (confident) or suburb name (inferred), with an ACT-overlap guard so Canberra postcodes aren't mistaken for regional NSW. A "Regional NSW only" filter isolates 491-qualifying roles.
+- **Dashboard** — totals, pipeline distribution, response rate (`Interview+Offer ÷ applied`), regional vs non-regional split, and an applications-over-time chart (Recharts).
+- **Add / edit** — quick modal with a live regional-status preview as you type the location.
+- **Filter & search** — by keyword, platform, and regional status.
+
+## Why not "just log into my SEEK/LinkedIn/Indeed account"?
+
+None of those platforms expose a candidate-side API to read *your* applications — their APIs are employer/recruiter-only. So, like Teal/Huntr/Simplify, this app is the source of truth and jobs enter via **manual add**, **paste-a-URL**, and (planned) a **companion browser extension** that one-click-captures the job you're viewing. See [`data/regional-nsw.md`](./data/regional-nsw.md) for the regional-area definition and [`data/seek-saved-searches.md`](./data/seek-saved-searches.md) for the SEEK saved-search setup that feeds discovery.
+
+## Tech stack
+
+- **Next.js 16** (App Router) + **React 19** + **TypeScript**
+- **Tailwind CSS 4**
+- **Prisma 6 + SQLite** (local, private; the data layer is isolated behind `lib/dataClient.ts` so swapping to Postgres/Firestore later is a contained change)
+- **dnd-kit** (kanban), **Recharts** (charts)
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env          # DATABASE_URL="file:./dev.db"
+npx prisma migrate dev        # create the SQLite DB + generate the client
+npm run dev                   # http://localhost:3000
+
+# optional: load the real regional-NSW starter matches (dev server must be running)
+node scripts/seed-via-api.mjs
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Project structure
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+app/
+  page.tsx                     server component — loads applications from the DB
+  api/applications/            REST endpoints (also the future extension ingest path)
+components/                    TrackerApp, Board, ApplicationCard, AddApplicationModal, StatsBar, FilterBar
+lib/
+  types.ts                     canonical value sets + shared types
+  dataClient.ts                data-access seam (all Prisma calls live here)
+  stats.ts                     pure client-side aggregation
+  regional/tagLocation.ts      designated-regional-area tagging (pure, unit-testable)
+data/                          regional-NSW dataset + saved-search notes + starter jobs
+prisma/schema.prisma           Application + StatusHistory models
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Roadmap
 
-## Learn More
+- [x] **MVP** — auth-free tracker: add/edit, kanban, stats, filters
+- [x] **Regional-NSW tagging** — postcode + suburb classification, ACT guard
+- [ ] **Companion Chrome extension (MV3)** — one-click save from a SEEK/LinkedIn/Indeed job page
+- [ ] **Resume-match scoring** — keyword/LLM relevance score against an uploaded resume
+- [ ] **Paste-URL auto-fetch** — pull title/company/location from a job URL
 
-To learn more about Next.js, take a look at the following resources:
+## Notes & limitations
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- The regional tag is **guidance, not immigration advice** — a postcode approximation of the official designation; it's user-overridable via the location field.
+- Single-user and local by design. No accounts, no cloud — your data lives in `prisma/dev.db` on your machine.

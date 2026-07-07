@@ -1,0 +1,31 @@
+{
+  "$schema_note": "Machine-readable designated regional area postcode ranges. Ranges are inclusive [from, to]; a singleton has from === to. category 2 = 'Cities & Major Regional Centres', category 3 = 'Regional Centres & Other Regional Areas'. BOTH categories count as designated-regional for subclass 491/494. A NSW postcode is regional iff it falls in any range below; otherwise it is Greater Sydney (non-regional).",
+  "source": {
+    "authority": "Australian Government, Department of Home Affairs",
+    "title": "Designated regional area postcodes",
+    "url": "https://immi.homeaffairs.gov.au/visas/working-in-australia/skill-occupation-list/regional-postcodes",
+    "retrieved": "2026-07-07",
+    "appliesTo": ["491", "494", "191-pathway"],
+    "disclaimer": "Guidance only, not immigration advice. Verify against the source before relying on it."
+  },
+  "states": {
+    "NSW": {
+      "regionalRanges": [
+        { "from": 2250, "to": 2258, "category": 3 },
+        { "from": 2259, "to": 2259, "category": 2 },
+        { "from": 2260, "to": 2263, "category": 3 },
+        { "from": 2264, "to": 2308, "category": 2 },
+        { "from": 2311, "to": 2490, "category": 3 },
+        { "from": 2500, "to": 2526, "category": 2 },
+        { "from": 2527, "to": 2527, "category": 3 },
+        { "from": 2528, "to": 2535, "category": 2 },
+        { "from": 2536, "to": 2551, "category": 3 },
+        { "from": 2574, "to": 2574, "category": 2 },
+        { "from": 2575, "to": 2739, "category": 3 },
+        { "from": 2753, "to": 2754, "category": 3 },
+        { "from": 2756, "to": 2758, "category": 3 },
+        { "from": 2773, "to": 2898, "category": 3 }
+      ]
+    }
+  }
+}

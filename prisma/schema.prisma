@@ -1,0 +1,49 @@
+// Prisma schema — single-user job application tracker (local SQLite).
+// SQLite has no native enums, so enum-like fields are Strings validated in app code
+// (see lib/types.ts for the canonical value sets).
+
+generator client {
+	provider = "prisma-client-js"
+}
+
+datasource db {
+	provider = "sqlite"
+	url      = env("DATABASE_URL")
+}
+
+model Application {
+	id              String    @id @default(cuid())
+	title           String
+	company         String
+	platform        String    @default("SEEK") // SEEK | LinkedIn | Indeed | Other
+	url             String?
+	location        String? // free-text as captured, e.g. "Wollongong NSW 2500"
+	postcode        String?
+	state           String?
+	isRegionalNSW   Boolean   @default(false)
+	regionMatchType String    @default("none") // postcode | suburb | none
+	salaryMin       Int?
+	salaryMax       Int?
+	salaryText      String?
+	status          String    @default("Saved") // Saved | Applied | Interview | Offer | Rejected
+	statusOrder     Int       @default(0) // position within its kanban column
+	dateApplied     DateTime?
+	notes           String?
+	source          String    @default("manual") // manual | url-fetch | extension
+	matchScore      Int? // 0-100 (Phase 4)
+	createdAt       DateTime  @default(now())
+	updatedAt       DateTime  @updatedAt
+
+	history StatusHistory[]
+}
+
+model StatusHistory {
+	id            String      @id @default(cuid())
+	applicationId String
+	application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+	fromStatus    String?
+	toStatus      String
+	changedAt     DateTime    @default(now())
+
+	@@index([applicationId])
+}
