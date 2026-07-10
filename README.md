@@ -40,13 +40,15 @@ node scripts/seed-via-api.mjs
 ```
 app/
   page.tsx                     server component — loads applications from the DB
-  api/applications/            REST endpoints (also the future extension ingest path)
+  api/applications/            REST endpoints (manual add/edit/move/delete)
+  api/ingest/                  extension ingest endpoint (CORS + URL dedupe)
 components/                    TrackerApp, Board, ApplicationCard, AddApplicationModal, StatsBar, FilterBar
 lib/
   types.ts                     canonical value sets + shared types
   dataClient.ts                data-access seam (all Prisma calls live here)
   stats.ts                     pure client-side aggregation
   regional/tagLocation.ts      designated-regional-area tagging (pure, unit-testable)
+extension/                     companion Chrome extension (MV3) — one-click save (see extension/README.md)
 data/                          regional-NSW dataset + saved-search notes + starter jobs
 prisma/schema.prisma           Application + StatusHistory models
 ```
@@ -55,7 +57,7 @@ prisma/schema.prisma           Application + StatusHistory models
 
 - [x] **MVP** — auth-free tracker: add/edit, kanban, stats, filters
 - [x] **Regional-NSW tagging** — postcode + suburb classification, ACT guard
-- [ ] **Companion Chrome extension (MV3)** — one-click save from a SEEK/LinkedIn/Indeed job page
+- [x] **Companion Chrome extension (MV3)** — one-click save from a SEEK/LinkedIn/Indeed job page ([`extension/`](./extension))
 - [ ] **Resume-match scoring** — keyword/LLM relevance score against an uploaded resume
 - [ ] **Paste-URL auto-fetch** — pull title/company/location from a job URL
 

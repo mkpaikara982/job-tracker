@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="stylesheet" href="popup.css" />
+		<title>JobTrackr</title>
+	</head>
+	<body>
+		<header class="hdr">
+			<span class="logo">JT</span>
+			<div class="hdr-text">
+				<h1>JobTrackr</h1>
+				<span id="platform" class="platform">—</span>
+			</div>
+			<button id="gear" class="gear" title="Settings" aria-label="Settings">⚙</button>
+		</header>
+
+		<section id="settings" class="settings hidden">
+			<label for="baseUrl">JobTrackr URL</label>
+			<div class="row">
+				<input id="baseUrl" type="text" placeholder="http://localhost:3000" />
+				<button id="saveSettings" class="btn-mini">Save</button>
+			</div>
+			<p class="hint">Where your local <code>npm run dev</code> server is running.</p>
+		</section>
+
+		<main id="form" class="form">
+			<label for="title">Job title</label>
+			<input id="title" type="text" />
+
+			<label for="company">Company</label>
+			<input id="company" type="text" />
+
+			<label for="location">Location</label>
+			<input id="location" type="text" />
+
+			<label for="salary">Salary <span class="opt">(optional)</span></label>
+			<input id="salary" type="text" />
+
+			<button id="save" class="btn-save">Save to JobTrackr</button>
+		</main>
+
+		<p id="status" class="status" role="status"></p>
+
+		<script src="popup.js"></script>
+	</body>
+</html>

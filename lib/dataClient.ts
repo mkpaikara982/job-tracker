@@ -37,6 +37,15 @@ export async function listApplications(): Promise<Application[]> {
 	return rows.map(toApplication);
 }
 
+// Look up an application by its source URL — used by the extension to avoid
+// saving the same job twice.
+export async function findApplicationByUrl(url: string): Promise<Application | null> {
+	const trimmed = url.trim();
+	if (!trimmed) return null;
+	const row = await prisma.application.findFirst({ where: { url: trimmed } });
+	return row ? toApplication(row) : null;
+}
+
 export async function createApplication(input: ApplicationInput): Promise<Application> {
 	const status: Status = isStatus(input.status) ? input.status : "Saved";
 	const tag = tagLocation(input.location);
