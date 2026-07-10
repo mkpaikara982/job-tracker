@@ -96,7 +96,13 @@ export function ApplicationCard({
 				</p>
 			)}
 
-			{app.url && (
+			{app.matchScore == null && (
+				<p className="mt-1.5 text-[11px] leading-snug text-slate-300">
+					Not scored — add a job description (Edit ✎) to match it against your resume.
+				</p>
+			)}
+
+			{app.url ? (
 				<a
 					href={app.url}
 					target="_blank"
@@ -105,6 +111,10 @@ export function ApplicationCard({
 				>
 					Open job to apply ↗
 				</a>
+			) : (
+				<p className="mt-2 text-[11px] text-slate-300">
+					No job link saved — add one via Edit ✎, or save the job with the extension.
+				</p>
 			)}
 		</div>
 	);
