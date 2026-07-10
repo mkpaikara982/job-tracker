@@ -186,6 +186,51 @@ export async function updateApplication(
 	return toApplication(updated);
 }
 
+// A job scraped from a search results page (may carry an `applied` flag from the site).
+export type ScrapedJob = ApplicationInput & { applied?: boolean };
+export type UpsertResult = { result: "added" | "enriched" | "duplicate"; application: Application };
+
+function normKey(title: string, company: string): string {
+	const n = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
+	return `${n(title)}|${n(company)}`;
+}
+
+// Upsert a scraped job (used by the "refresh searches" flow and the extension):
+//   1. same URL already tracked        → duplicate (no change)
+//   2. matches a URL-less card by title+company → enrich it (add URL, fill blanks)
+//   3. otherwise                        → add as a new application
+export async function upsertScrapedJob(input: ScrapedJob): Promise<UpsertResult> {
+	const url = input.url?.trim() || null;
+	if (url) {
+		const byUrl = await prisma.application.findFirst({ where: { url } });
+		if (byUrl) return { result: "duplicate", application: toApplication(byUrl) };
+	}
+
+	// Enrich a manually-seeded (URL-less) card that is clearly the same job.
+	const key = normKey(input.title, input.company);
+	const urlless = await prisma.application.findMany({ where: { url: null } });
+	const match = urlless.find((a) => normKey(a.title, a.company) === key);
+	if (match) {
+		const patch: Partial<ApplicationInput> = { url };
+		if (!match.description && input.description) patch.description = input.description;
+		if (!match.salaryText && input.salaryText) patch.salaryText = input.salaryText;
+		// If the site says he's already applied and we haven't advanced the card yet,
+		// move it into the Applied column.
+		if (input.applied && match.status === "Saved") patch.status = "Applied";
+		const application = await updateApplication(match.id, patch);
+		return { result: "enriched", application };
+	}
+
+	// Genuinely new — jobs the site marks as already applied start in the Applied column.
+	const status = input.applied ? "Applied" : input.status ?? "Saved";
+	const application = await createApplication({
+		...input,
+		status,
+		source: input.source ?? "extension",
+	});
+	return { result: "added", application };
+}
+
 // Move a card within/between kanban columns.
 export async function moveApplication(
 	id: string,

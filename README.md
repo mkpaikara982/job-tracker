@@ -44,6 +44,7 @@ app/
   api/ingest/                  extension ingest endpoint (CORS + URL dedupe)
   api/profile/                 resume upload/get (docx/txt → text → skills); saving re-scores all jobs
   api/rescore/                 re-score every job against the current resume on demand
+  api/refresh/                 batch upsert of jobs scraped from the SEEK saved searches
 components/                    TrackerApp, Board, ApplicationCard, AddApplicationModal, StatsBar, FilterBar, ResumePanel, MatchBadge
 lib/
   types.ts                     canonical value sets + shared types
@@ -63,6 +64,7 @@ prisma/schema.prisma           Application + StatusHistory + Profile models
 - [x] **Regional-NSW tagging** — postcode + suburb classification, ACT guard
 - [x] **Companion Chrome extension (MV3)** — one-click save from a SEEK/LinkedIn/Indeed job page ([`extension/`](./extension)), now also capturing the job description for scoring
 - [x] **Resume-match scoring** — upload a resume (`.docx`/`.txt`), and every job gets a 0–100 match score from keyword overlap (title-weighted, with matched/missing skill lists). Sort the board by match, and re-score on demand.
+- [x] **Refresh from saved searches** — pull every job from the regional-NSW SEEK searches in one go (via the authenticated browser), upserting onto the board: enriches existing cards with live URLs, adds new matches, skips security-clearance roles. See [`scripts/refresh-searches.md`](./scripts/refresh-searches.md).
 - [ ] **Paste-URL auto-fetch** — pull title/company/location from a job URL
 
 ## Notes & limitations

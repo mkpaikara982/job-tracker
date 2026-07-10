@@ -1,0 +1,20 @@
+{
+  "_note": "Regional-NSW ICT saved searches to pull during a refresh. Each is an au.seek.com results URL scoped to a designated-regional-area SEEK region entity (no Greater Sydney bleed). Driven through the authenticated browser — SEEK has no server-callable search API. See scripts/refresh-searches.md.",
+  "classification": "Information & Communication Technology (6281)",
+  "searches": [
+    {
+      "region": "Wollongong, Illawarra & South Coast NSW",
+      "url": "https://au.seek.com/jobs-in-information-communication-technology/in-Wollongong,-Illawarra-&-South-Coast-NSW"
+    },
+    {
+      "region": "Newcastle, Maitland & Hunter NSW",
+      "url": "https://au.seek.com/jobs-in-information-communication-technology/in-Newcastle,-Maitland-&-Hunter-NSW"
+    },
+    {
+      "region": "Gosford & Central Coast NSW",
+      "url": "https://au.seek.com/jobs-in-information-communication-technology/in-Gosford-&-Central-Coast-NSW"
+    }
+  ],
+  "skipClearanceRoles": true,
+  "clearanceSignals": "leidos|boeing defence|tspv|disa|nv1|nv2|agsva|security clearance|baseline clearance|australian citizen|citizenship required|national security|defence|raaf|combat aircraft|mq-28|air battle"
+}
