@@ -35,8 +35,11 @@ export interface Application {
 	statusOrder: number;
 	dateApplied: string | null;
 	notes: string | null;
+	description: string | null;
 	source: Source;
 	matchScore: number | null;
+	matchedSkills: string[];
+	missingSkills: string[];
 	createdAt: string;
 	updatedAt: string;
 }
@@ -52,7 +55,16 @@ export interface ApplicationInput {
 	status?: Status;
 	dateApplied?: string | null;
 	notes?: string | null;
+	description?: string | null;
 	source?: Source;
+}
+
+// The user's resume profile that jobs are scored against.
+export interface Profile {
+	resumeText: string;
+	resumeName: string | null;
+	skills: string[];
+	updatedAt: string | null;
 }
 
 export function isStatus(v: unknown): v is Status {

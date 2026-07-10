@@ -1,18 +1,29 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { type Application, type ApplicationInput, STATUSES, type Status } from "@/lib/types";
-import { apiCreate, apiDelete, apiList, apiMove, apiUpdate } from "@/lib/apiClient";
+import { useEffect, useMemo, useState } from "react";
+import {
+	type Application,
+	type ApplicationInput,
+	type Profile,
+	STATUSES,
+	type Status,
+} from "@/lib/types";
+import { apiCreate, apiDelete, apiGetProfile, apiList, apiMove, apiUpdate } from "@/lib/apiClient";
 import { AddApplicationModal } from "@/components/AddApplicationModal";
 import { Board } from "@/components/Board";
 import { StatsBar } from "@/components/StatsBar";
+import { ResumePanel } from "@/components/ResumePanel";
 import { EMPTY_FILTERS, type Filters, FilterBar, isFiltering } from "@/components/FilterBar";
 
-function groupByStatus(apps: Application[]): Record<Status, Application[]> {
+function groupByStatus(apps: Application[], sortByMatch: boolean): Record<Status, Application[]> {
 	const cols = Object.fromEntries(STATUSES.map((s) => [s, [] as Application[]])) as Record<Status, Application[]>;
 	for (const a of apps) cols[a.status].push(a);
 	for (const s of STATUSES)
-		cols[s].sort((x, y) => x.statusOrder - y.statusOrder || x.createdAt.localeCompare(y.createdAt));
+		cols[s].sort((x, y) =>
+			sortByMatch
+				? (y.matchScore ?? -1) - (x.matchScore ?? -1) || x.statusOrder - y.statusOrder
+				: x.statusOrder - y.statusOrder || x.createdAt.localeCompare(y.createdAt),
+		);
 	return cols;
 }
 
@@ -21,8 +32,23 @@ export function TrackerApp({ initial }: { initial: Application[] }) {
 	const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
 	const [modalOpen, setModalOpen] = useState(false);
 	const [editing, setEditing] = useState<Application | null>(null);
+	const [profile, setProfile] = useState<Profile | null>(null);
+	const [sortByMatch, setSortByMatch] = useState(false);
+
+	useEffect(() => {
+		apiGetProfile().then(setProfile).catch(() => {});
+	}, []);
+
+	// After a resume change/rescore, pull the freshly-scored board.
+	function onProfileChanged(p: Profile) {
+		setProfile(p);
+		apiList().then(setApps).catch(() => {});
+	}
 
 	const filtering = isFiltering(filters);
+	// Match-sort reorders columns, which conflicts with drag persistence — disable drag
+	// while it's on (same rule as active filters).
+	const draggable = !filtering && !sortByMatch;
 
 	const filtered = useMemo(() => {
 		const q = filters.search.trim().toLowerCase();
@@ -37,7 +63,7 @@ export function TrackerApp({ initial }: { initial: Application[] }) {
 		});
 	}, [apps, filters]);
 
-	const columns = useMemo(() => groupByStatus(filtered), [filtered]);
+	const columns = useMemo(() => groupByStatus(filtered, sortByMatch), [filtered, sortByMatch]);
 
 	function openAdd() {
 		setEditing(null);
@@ -73,7 +99,7 @@ export function TrackerApp({ initial }: { initial: Application[] }) {
 		const active = apps.find((a) => a.id === activeId);
 		if (!active) return;
 
-		const cols = groupByStatus(apps);
+		const cols = groupByStatus(apps, false);
 		cols[active.status] = cols[active.status].filter((a) => a.id !== activeId);
 		const target = cols[toStatus];
 		let idx = overCardId ? target.findIndex((a) => a.id === overCardId) : target.length;
@@ -118,15 +144,28 @@ export function TrackerApp({ initial }: { initial: Application[] }) {
 				</button>
 			</header>
 
+			<div className="mb-4">
+				<ResumePanel profile={profile} onChanged={onProfileChanged} />
+			</div>
+
 			<div className="mb-6">
 				<StatsBar apps={apps} />
 			</div>
 
 			<div className="mb-3 flex flex-wrap items-center justify-between gap-2">
 				<FilterBar filters={filters} onChange={setFilters} />
-				{filtering && (
-					<p className="text-xs text-slate-400">Clear filters to reorder cards</p>
-				)}
+				<div className="flex items-center gap-3">
+					<label className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-slate-600">
+						<input
+							type="checkbox"
+							checked={sortByMatch}
+							onChange={(e) => setSortByMatch(e.target.checked)}
+							className="h-3.5 w-3.5"
+						/>
+						Sort by match
+					</label>
+					{!draggable && <p className="text-xs text-slate-400">Reordering paused</p>}
+				</div>
 			</div>
 
 			{apps.length === 0 ? (
@@ -139,7 +178,7 @@ export function TrackerApp({ initial }: { initial: Application[] }) {
 			) : (
 				<Board
 					columns={columns}
-					draggable={!filtering}
+					draggable={draggable}
 					onEdit={openEdit}
 					onDelete={remove}
 					onMove={move}

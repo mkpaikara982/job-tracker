@@ -29,12 +29,25 @@ model Application {
 	statusOrder     Int       @default(0) // position within its kanban column
 	dateApplied     DateTime?
 	notes           String?
+	description     String? // full job-description text (for resume-match scoring)
 	source          String    @default("manual") // manual | url-fetch | extension
-	matchScore      Int? // 0-100 (Phase 4)
+	matchScore      Int? // 0-100 resume-match score (Phase 4); null = not yet scored
+	matchedSkills   String? // JSON array of resume skills found in this job
+	missingSkills   String? // JSON array of job keywords the resume lacks
 	createdAt       DateTime  @default(now())
 	updatedAt       DateTime  @updatedAt
 
 	history StatusHistory[]
+}
+
+// Single-row table (id = "singleton") holding the user's resume + derived skills,
+// used to score how well each job matches. One resume at a time by design.
+model Profile {
+	id         String   @id @default("singleton")
+	resumeText String   @default("")
+	resumeName String? // source filename, shown in the UI
+	skills     String   @default("[]") // JSON array of extracted skill keywords
+	updatedAt  DateTime @updatedAt
 }
 
 model StatusHistory {

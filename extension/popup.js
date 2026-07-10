@@ -22,6 +22,7 @@ const els = {
 
 let scrapedUrl = ""; // canonical job URL captured at scrape time
 let scrapedPlatform = "Other"; // validated platform captured at scrape time
+let scrapedDescription = ""; // job-description body captured at scrape time (for scoring)
 
 function setStatus(msg, kind) {
 	els.status.textContent = msg;
@@ -40,6 +41,13 @@ function extractJob() {
 	const text = (sel) => {
 		const el = document.querySelector(sel);
 		return el && el.textContent ? el.textContent.trim() : "";
+	};
+	// Read the first matching element's visible text, whitespace-collapsed and capped
+	// (job descriptions can be long — 8k chars is plenty for keyword scoring).
+	const bodyText = (sel) => {
+		const el = document.querySelector(sel);
+		const t = el && el.innerText ? el.innerText : "";
+		return t.replace(/\s+\n/g, "\n").replace(/[ \t]{2,}/g, " ").trim().slice(0, 8000);
 	};
 	const metaProp = (p) => {
 		const m = document.querySelector(`meta[property="${p}"]`);
@@ -84,6 +92,7 @@ function extractJob() {
 	let company = "";
 	let locationStr = "";
 	let salary = "";
+	let description = "";
 
 	if (host.includes("seek.com")) {
 		platform = "SEEK";
@@ -91,6 +100,7 @@ function extractJob() {
 		company = text('[data-automation="advertiser-name"]');
 		locationStr = text('[data-automation="job-detail-location"]');
 		salary = text('[data-automation="job-detail-salary"]');
+		description = bodyText('[data-automation="jobAdDetails"]');
 	} else if (host.includes("linkedin.com")) {
 		platform = "LinkedIn";
 		title = text(
@@ -107,6 +117,9 @@ function extractJob() {
 		locationStr = liDesc
 			? liDesc.split("·")[0].replace(/\s+/g, " ").trim()
 			: text(".topcard__flavor--bullet, .jobs-unified-top-card__bullet");
+		description = bodyText(
+			"#job-details, .jobs-description__content, .jobs-box__html-content, .jobs-description-content__text, .show-more-less-html__markup, .description__text",
+		);
 	} else if (host.includes("indeed.com")) {
 		platform = "Indeed";
 		title = text('[data-testid="jobsearch-JobInfoHeader-title"], .jobsearch-JobInfoHeader-title');
@@ -116,6 +129,7 @@ function extractJob() {
 		locationStr = text(
 			'[data-testid="inlineHeader-companyLocation"], [data-testid="job-location"], [data-testid="jobsearch-JobInfoHeader-companyLocation"]',
 		);
+		description = bodyText('#jobDescriptionText, [data-testid="jobsearch-JobComponent-description"]');
 	}
 
 	// Fill any gaps from JSON-LD, then meta/title.
@@ -124,6 +138,12 @@ function extractJob() {
 		company = company || (ld.hiringOrganization && ld.hiringOrganization.name) || "";
 		locationStr = locationStr || ldLocation(ld);
 		salary = salary || ldSalary(ld);
+		// JSON-LD description is HTML — strip tags to plain text as a fallback.
+		if (!description && ld.description) {
+			const tmp = document.createElement("div");
+			tmp.innerHTML = ld.description;
+			description = (tmp.textContent || "").replace(/[ \t]{2,}/g, " ").trim().slice(0, 8000);
+		}
 	}
 	title = title || metaProp("og:title") || document.title || "";
 	// Strip trailing site suffixes from meta/title fallbacks (e.g. "… Job in X - SEEK").
@@ -143,6 +163,7 @@ function extractJob() {
 		company: company.trim(),
 		location: locationStr.trim(),
 		salaryText: salary.trim(),
+		description: description.trim(),
 		url,
 	};
 }
@@ -173,8 +194,11 @@ function fillForm(job) {
 	els.location.value = job.location || "";
 	els.salary.value = job.salaryText || "";
 	scrapedUrl = job.url || "";
+	scrapedDescription = job.description || "";
 	if (!job.title && !job.company) {
 		setStatus("Couldn't detect a job here — fill in the details and save.", "warn");
+	} else if (scrapedDescription) {
+		setStatus(`Job description captured (${scrapedDescription.length} chars) — will be scored.`, "ok");
 	}
 }
 
@@ -192,6 +216,7 @@ async function save() {
 		platform: scrapedPlatform, // validated against PLATFORMS at scrape time
 		location: els.location.value.trim() || null,
 		salaryText: els.salary.value.trim() || null,
+		description: scrapedDescription || null,
 		url: scrapedUrl || null,
 		source: "extension",
 	};

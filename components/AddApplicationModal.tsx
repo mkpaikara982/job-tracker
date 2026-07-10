@@ -14,6 +14,7 @@ const EMPTY: ApplicationInput = {
 	salaryText: "",
 	status: "Saved",
 	notes: "",
+	description: "",
 };
 
 export function AddApplicationModal({
@@ -45,6 +46,7 @@ export function AddApplicationModal({
 						salaryText: editing.salaryText ?? "",
 						status: editing.status,
 						notes: editing.notes ?? "",
+						description: editing.description ?? "",
 					}
 				: EMPTY,
 		);
@@ -169,6 +171,14 @@ export function AddApplicationModal({
 								onChange={(e) => set("notes", e.target.value)}
 								className="input min-h-[70px]"
 								placeholder="Referral, recruiter name, follow-up date…"
+							/>
+						</Field>
+						<Field label="Job description (paste to improve match score)" className="col-span-2">
+							<textarea
+								value={form.description ?? ""}
+								onChange={(e) => set("description", e.target.value)}
+								className="input min-h-[90px]"
+								placeholder="Paste the job ad text here — its skills are matched against your resume."
 							/>
 						</Field>
 					</div>

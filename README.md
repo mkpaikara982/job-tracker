@@ -42,23 +42,27 @@ app/
   page.tsx                     server component — loads applications from the DB
   api/applications/            REST endpoints (manual add/edit/move/delete)
   api/ingest/                  extension ingest endpoint (CORS + URL dedupe)
-components/                    TrackerApp, Board, ApplicationCard, AddApplicationModal, StatsBar, FilterBar
+  api/profile/                 resume upload/get (docx/txt → text → skills); saving re-scores all jobs
+  api/rescore/                 re-score every job against the current resume on demand
+components/                    TrackerApp, Board, ApplicationCard, AddApplicationModal, StatsBar, FilterBar, ResumePanel, MatchBadge
 lib/
   types.ts                     canonical value sets + shared types
   dataClient.ts                data-access seam (all Prisma calls live here)
   stats.ts                     pure client-side aggregation
   regional/tagLocation.ts      designated-regional-area tagging (pure, unit-testable)
-extension/                     companion Chrome extension (MV3) — one-click save (see extension/README.md)
+  scoring/                     resume-match scoring — skill dictionary + pure keyword-overlap scorer
+  resume.ts                    resume file → text extraction (mammoth for .docx)
+extension/                     companion Chrome extension (MV3) — one-click save + JD capture (see extension/README.md)
 data/                          regional-NSW dataset + saved-search notes + starter jobs
-prisma/schema.prisma           Application + StatusHistory models
+prisma/schema.prisma           Application + StatusHistory + Profile models
 ```
 
 ## Roadmap
 
 - [x] **MVP** — auth-free tracker: add/edit, kanban, stats, filters
 - [x] **Regional-NSW tagging** — postcode + suburb classification, ACT guard
-- [x] **Companion Chrome extension (MV3)** — one-click save from a SEEK/LinkedIn/Indeed job page ([`extension/`](./extension))
-- [ ] **Resume-match scoring** — keyword/LLM relevance score against an uploaded resume
+- [x] **Companion Chrome extension (MV3)** — one-click save from a SEEK/LinkedIn/Indeed job page ([`extension/`](./extension)), now also capturing the job description for scoring
+- [x] **Resume-match scoring** — upload a resume (`.docx`/`.txt`), and every job gets a 0–100 match score from keyword overlap (title-weighted, with matched/missing skill lists). Sort the board by match, and re-score on demand.
 - [ ] **Paste-URL auto-fetch** — pull title/company/location from a job URL
 
 ## Notes & limitations

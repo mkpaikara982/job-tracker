@@ -4,6 +4,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Application } from "@/lib/types";
 import { RegionalBadge } from "@/components/RegionalBadge";
+import { MatchBadge } from "@/components/MatchBadge";
 
 const PLATFORM_STYLES: Record<string, string> = {
 	SEEK: "bg-pink-100 text-pink-700",
@@ -74,6 +75,7 @@ export function ApplicationCard({
 					{app.platform}
 				</span>
 				<RegionalBadge app={app} />
+				<MatchBadge app={app} />
 			</div>
 
 			{(app.location || app.salaryText) && (
@@ -82,14 +84,26 @@ export function ApplicationCard({
 				</p>
 			)}
 
+			{app.matchScore != null && (app.matchedSkills.length > 0 || app.missingSkills.length > 0) && (
+				<p className="mt-1.5 text-[11px] leading-snug text-slate-500">
+					{app.matchedSkills.length > 0 && (
+						<span className="text-emerald-600">✓ {app.matchedSkills.slice(0, 5).join(", ")}</span>
+					)}
+					{app.matchedSkills.length > 0 && app.missingSkills.length > 0 && <span> · </span>}
+					{app.missingSkills.length > 0 && (
+						<span className="text-slate-400">gap: {app.missingSkills.slice(0, 4).join(", ")}</span>
+					)}
+				</p>
+			)}
+
 			{app.url && (
 				<a
 					href={app.url}
 					target="_blank"
 					rel="noopener noreferrer"
-					className="mt-2 inline-block text-xs text-sky-600 hover:underline"
+					className="mt-2 inline-flex items-center gap-1 rounded-md bg-sky-50 px-2 py-1 text-xs font-medium text-sky-700 hover:bg-sky-100"
 				>
-					View posting ↗
+					Open job to apply ↗
 				</a>
 			)}
 		</div>
