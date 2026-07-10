@@ -94,14 +94,19 @@ function extractJob() {
 	} else if (host.includes("linkedin.com")) {
 		platform = "LinkedIn";
 		title = text(
-			".top-card-layout__title, .topcard__title, .job-details-jobs-unified-top-card__job-title, .jobs-unified-top-card__job-title",
+			".job-details-jobs-unified-top-card__job-title, .jobs-unified-top-card__job-title, .top-card-layout__title, .topcard__title",
 		);
 		company = text(
-			".topcard__org-name-link, .topcard__flavor, .job-details-jobs-unified-top-card__company-name a, .job-details-jobs-unified-top-card__company-name",
+			".job-details-jobs-unified-top-card__company-name a, .job-details-jobs-unified-top-card__company-name, .topcard__org-name-link, .topcard__flavor",
 		);
-		locationStr = text(
-			".topcard__flavor--bullet, .job-details-jobs-unified-top-card__bullet, .jobs-unified-top-card__bullet",
+		// Logged-in LinkedIn puts the location as the first "·"-separated segment of the
+		// top-card description line; public/guest pages still use the older bullet class.
+		const liDesc = text(
+			".job-details-jobs-unified-top-card__primary-description-container, .job-details-jobs-unified-top-card__tertiary-description-container, .jobs-unified-top-card__primary-description, .jobs-unified-top-card__subtitle-primary-grouping",
 		);
+		locationStr = liDesc
+			? liDesc.split("·")[0].replace(/\s+/g, " ").trim()
+			: text(".topcard__flavor--bullet, .jobs-unified-top-card__bullet");
 	} else if (host.includes("indeed.com")) {
 		platform = "Indeed";
 		title = text('[data-testid="jobsearch-JobInfoHeader-title"], .jobsearch-JobInfoHeader-title');
@@ -124,13 +129,21 @@ function extractJob() {
 	// Strip trailing site suffixes from meta/title fallbacks (e.g. "… Job in X - SEEK").
 	title = title.replace(/\s*[-|]\s*(SEEK|LinkedIn|Indeed).*$/i, "").trim();
 
+	let url = canonical();
+	// LinkedIn's split-pane search view reports the search page as canonical, not the
+	// open job — recover the real job URL from the currentJobId query param if present.
+	if (platform === "LinkedIn") {
+		const m = location.href.match(/currentJobId=(\d+)/);
+		if (m) url = `https://www.linkedin.com/jobs/view/${m[1]}/`;
+	}
+
 	return {
 		platform,
 		title: title.trim(),
 		company: company.trim(),
 		location: locationStr.trim(),
 		salaryText: salary.trim(),
-		url: canonical(),
+		url,
 	};
 }
 
