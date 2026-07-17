@@ -18,6 +18,9 @@ const els = {
 	settings: $("settings"),
 	baseUrl: $("baseUrl"),
 	saveSettings: $("saveSettings"),
+	notifyEnabled: $("notifyEnabled"),
+	checkNow: $("checkNow"),
+	checkStatus: $("checkStatus"),
 };
 
 let scrapedUrl = ""; // canonical job URL captured at scrape time
@@ -265,8 +268,55 @@ async function initSettings() {
 	});
 }
 
+// ---- Weekly new-job alert ----
+function fmtWhen(ts) {
+	if (!ts) return "";
+	return new Date(ts).toLocaleString(undefined, {
+		weekday: "short",
+		day: "numeric",
+		month: "short",
+		hour: "numeric",
+		minute: "2-digit",
+	});
+}
+
+async function refreshAlertStatus() {
+	chrome.runtime.sendMessage({ type: "status" }, (s) => {
+		if (chrome.runtime.lastError || !s) return;
+		const parts = [];
+		if (s.lastRun) parts.push(`Last: ${s.lastRun.newCount} new (${fmtWhen(s.lastRun.at)})`);
+		if (s.nextRunAt) parts.push(`Next: ${fmtWhen(s.nextRunAt)}`);
+		els.checkStatus.textContent = parts.join(" · ");
+	});
+}
+
+async function initNotifications() {
+	const { enabled = true } = await chrome.storage.sync.get("enabled");
+	els.notifyEnabled.checked = enabled;
+	els.notifyEnabled.addEventListener("change", async () => {
+		await chrome.storage.sync.set({ enabled: els.notifyEnabled.checked });
+		setStatus(els.notifyEnabled.checked ? "Weekly alert on." : "Weekly alert off.", "ok");
+	});
+	els.checkNow.addEventListener("click", () => {
+		els.checkNow.disabled = true;
+		els.checkStatus.textContent = "Checking your searches…";
+		chrome.runtime.sendMessage({ type: "checkNow" }, (r) => {
+			els.checkNow.disabled = false;
+			if (chrome.runtime.lastError || !r) {
+				els.checkStatus.textContent = "Check failed — try again.";
+				return;
+			}
+			if (r.skipped) els.checkStatus.textContent = `Skipped (${r.skipped}).`;
+			else els.checkStatus.textContent = `Found ${r.newCount} new of ${r.scraped} scanned.`;
+			refreshAlertStatus();
+		});
+	});
+	refreshAlertStatus();
+}
+
 async function init() {
 	await initSettings();
+	await initNotifications();
 	els.save.addEventListener("click", save);
 	const job = await scrapeActiveTab();
 	if (job) fillForm(job);

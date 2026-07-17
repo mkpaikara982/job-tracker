@@ -27,8 +27,15 @@ export async function POST(req: Request) {
 	}
 
 	const summary = { added: 0, enriched: 0, duplicate: 0, skipped: 0 };
-	const addedJobs: string[] = [];
-	const enrichedJobs: string[] = [];
+	const brief = (a: { title: string; company: string; url: string | null; matchScore: number | null; isRegionalNSW: boolean }) => ({
+		title: a.title,
+		company: a.company,
+		url: a.url,
+		matchScore: a.matchScore,
+		isRegionalNSW: a.isRegionalNSW,
+	});
+	const added: ReturnType<typeof brief>[] = [];
+	const enriched: ReturnType<typeof brief>[] = [];
 
 	for (const job of body.jobs) {
 		if (!job?.title?.trim() || !job?.company?.trim()) {
@@ -37,9 +44,9 @@ export async function POST(req: Request) {
 		}
 		const { result, application } = await upsertScrapedJob(job);
 		summary[result]++;
-		if (result === "added") addedJobs.push(`${application.title} — ${application.company}`);
-		if (result === "enriched") enrichedJobs.push(`${application.title} — ${application.company}`);
+		if (result === "added") added.push(brief(application));
+		if (result === "enriched") enriched.push(brief(application));
 	}
 
-	return NextResponse.json({ summary, addedJobs, enrichedJobs }, { status: 200, headers: CORS });
+	return NextResponse.json({ summary, added, enriched }, { status: 200, headers: CORS });
 }

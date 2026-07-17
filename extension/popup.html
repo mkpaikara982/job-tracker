@@ -23,6 +23,21 @@
 				<button id="saveSettings" class="btn-mini">Save</button>
 			</div>
 			<p class="hint">Where your local <code>npm run dev</code> server is running.</p>
+
+			<div class="divider"></div>
+
+			<label class="check">
+				<input id="notifyEnabled" type="checkbox" />
+				<span>Weekly new-job alert</span>
+			</label>
+			<p class="hint">
+				Checks your regional SEEK searches every <strong>Monday ~10am</strong> (Sydney), adds new
+				matches to your board, and notifies you. Runs on next launch if Chrome was closed.
+			</p>
+			<div class="row">
+				<button id="checkNow" class="btn-mini">Check now</button>
+				<span id="checkStatus" class="hint mono"></span>
+			</div>
 		</section>
 
 		<main id="form" class="form">
